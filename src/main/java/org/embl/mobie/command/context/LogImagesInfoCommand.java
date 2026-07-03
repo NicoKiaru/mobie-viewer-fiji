@@ -36,6 +36,7 @@ import net.imglib2.realtransform.AffineTransform3D;
 import org.embl.mobie.lib.data.DataStore;
 import org.embl.mobie.command.CommandConstants;
 import org.embl.mobie.lib.image.RegionAnnotationImage;
+import org.embl.mobie.lib.source.SourceHelper;
 import org.embl.mobie.lib.util.MoBIEHelper;
 import org.embl.mobie.lib.image.Image;
 import org.embl.mobie.lib.io.ImageDataInfo;
@@ -95,10 +96,10 @@ public class LogImagesInfoCommand implements BdvPlaygroundActionCommand
             if ( imageTransformation instanceof AffineTransformation )
             {
                 AffineTransform3D initialTransform = ( ( AffineTransformation ) imageTransformation ).getAffineTransform3D();
-                IJ.log( "Original image transformation: " + MoBIEHelper.print( initialTransform.getRowPackedCopy(), 3 ) );
+                IJ.log( "Original image transformation: " + MoBIEHelper.print( initialTransform.getRowPackedCopy(), -1 ) );
                 AffineTransform3D additionalTransform = sourceTransform.copy().concatenate( initialTransform.inverse() );
-                IJ.log( "Combined additional transformation: " + MoBIEHelper.print( additionalTransform.getRowPackedCopy(), 3 ) );
-                IJ.log( "Total transformation: " +  MoBIEHelper.print( sourceTransform.getRowPackedCopy(), 3 )  );
+                IJ.log( "Combined additional transformation: " + MoBIEHelper.print( additionalTransform.getRowPackedCopy(), -1 ) );
+                IJ.log( "Total transformation: " +  MoBIEHelper.print( sourceTransform.getRowPackedCopy(), -1 )  );
             }
 
             if ( showTransformationHistory )

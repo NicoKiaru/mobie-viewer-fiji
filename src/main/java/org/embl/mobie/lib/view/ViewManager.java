@@ -226,12 +226,12 @@ public class ViewManager
 		return currentDisplays;
 	}
 
-	public Map< String, SegmentationDisplay > getCurrentSegmentationDisplays()
+	public List< SegmentationDisplay > getCurrentSegmentationDisplays()
 	{
 		return currentDisplays.stream()
 				.filter( d -> d instanceof SegmentationDisplay )
-				.collect( Collectors.toMap( Display::getName, d -> (SegmentationDisplay) d ) );
-
+				.map( d -> ( SegmentationDisplay ) d )
+				.collect( Collectors.toList() );
 	}
 
 	public SliceViewer getSliceViewer()
@@ -515,24 +515,28 @@ public class ViewManager
 				final RegionAnnotationImage< AnnotatedRegion > regionAnnotationImage =
 						new RegionAnnotationImage( regionDisplay, annData );
 
-				if ( regionDisplay.sources != null && regionDisplay.sources.size() == 2 )
+				if ( regionDisplay.isVisible() )
 				{
-					Collection< List< String > > sources = regionDisplay.sources.values();
-					Iterator< List< String > > iterator = sources.iterator();
-					String source0 = iterator.next().get( 0 );
-					String source1 = iterator.next().get( 0 );
-					Image< ? > image0 = DataStore.getImage( source0 );
-					Image< ? > image1 = DataStore.getImage( source1 );
-					// if one of those is an AnnotationImage
-					// showing the region overlay is typically not useful
-					if ( image0 instanceof AnnotationImage
-						|| image1 instanceof AnnotationImage )
-						regionDisplay.setVisible( false );
-				}
-				else
-				{
-					// Showing the region overlay for only one annotated image typically is not useful
-					regionDisplay.setVisible( annData.getTable().numAnnotations() > 1 );
+					// Check whether it makes sense not to show it
+					if ( regionDisplay.sources != null && regionDisplay.sources.size() == 2 )
+					{
+						Collection< List< String > > sources = regionDisplay.sources.values();
+						Iterator< List< String > > iterator = sources.iterator();
+						String source0 = iterator.next().get( 0 );
+						String source1 = iterator.next().get( 0 );
+						Image< ? > image0 = DataStore.getImage( source0 );
+						Image< ? > image1 = DataStore.getImage( source1 );
+						// if one of those is an AnnotationImage
+						// showing the region overlay is typically not useful
+						if ( image0 instanceof AnnotationImage
+								|| image1 instanceof AnnotationImage )
+							regionDisplay.setVisible( false );
+					}
+					else
+					{
+						// Showing the region overlay for only one annotated image typically is not useful
+						regionDisplay.setVisible( annData.getTable().numAnnotations() > 1 );
+					}
 				}
 
 				// The region image has the same name as the display,
@@ -666,11 +670,11 @@ public class ViewManager
 						= ColoringModels.createNumericModel(
 								annotationDisplay.getColoringColumnName(),
 								lut,
-								annotationDisplay.getValueLimits(),
-						 true
+								annotationDisplay.getValueLimits()
 							);
 
 				annotationDisplay.coloringModel = new MoBIEColoringModel( coloringModel, annotationDisplay.selectionModel, annotationDisplay.getSelectionColor(), annotationDisplay.getOpacityNotSelected() );
+				ColoringModelUIs.show( coloringModel, annotationDisplay.selectionModel, annotationDisplay.getAnnData().getTable() );
 			}
 
 			// show the data
@@ -831,6 +835,7 @@ public class ViewManager
 	{
 		IJ.log( "Closing BDV..." );
 		removeAllSourceDisplays( true );
+		sliceViewer.close();
 		sliceViewer.getBdvHandle().close();
 		IJ.log( "Closing 3D Viewer..." );
 		universeManager.close();

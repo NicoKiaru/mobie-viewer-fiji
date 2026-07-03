@@ -43,7 +43,6 @@ import net.imglib2.type.numeric.NumericType;
 import sc.fiji.bdvpg.service.SourceServices;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class ImageDisplay< T extends NumericType< T > > extends AbstractDisplay< T >
 {
@@ -143,8 +142,7 @@ public class ImageDisplay< T extends NumericType< T > > extends AbstractDisplay<
 	public ImageDisplay( ImageDisplay< ? > imageDisplay )
 	{
 		this.name = imageDisplay.name;
-		this.sources = new ArrayList<>();
-		this.sources.addAll( imageDisplay.sourceAndConverters().stream().map( sac -> sac.getSpimSource().getName() ).collect( Collectors.toList() ) );
+		this.sources = new ArrayList<>( imageDisplay.getSources() );
 
 		setDisplaySettings( imageDisplay.sourceAndConverters().get( 0 ) );
 
@@ -217,6 +215,15 @@ public class ImageDisplay< T extends NumericType< T > > extends AbstractDisplay<
 	{
 		sources.add( source );
 		sourceToContrastLimits.put( source, contrastLimits );
+	}
+
+	public void setContrastLimits( String source, double[] contrastLimits )
+	{
+		if ( sourceToContrastLimits.isEmpty() )
+			initContrastLimits();
+
+		sourceToContrastLimits.put( source, contrastLimits );
+		this.contrastLimits = contrastLimits;
 	}
 
 	public void setDisplaySettings( SourceAndConverter< ? > sourceAndConverter )

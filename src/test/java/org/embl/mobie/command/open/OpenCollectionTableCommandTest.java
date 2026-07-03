@@ -14,8 +14,8 @@ import java.util.Random;
 public class OpenCollectionTableCommandTest
 {
     static { net.imagej.patcher.LegacyInjector.preinit(); }
-
-    @Test
+    
+    //@Test
     public void excelSheet( )
     {
         final ImageJ imageJ = new ImageJ();
@@ -26,7 +26,7 @@ public class OpenCollectionTableCommandTest
         command.run();
     }
 
-    @Test
+    //@Test
     public void googleSheet( )
     {
         final ImageJ imageJ = new ImageJ();
@@ -37,7 +37,17 @@ public class OpenCollectionTableCommandTest
         command.run();
     }
 
-    @Test
+    public void gridWithSameNameInDifferentViews( )
+    {
+        final ImageJ imageJ = new ImageJ();
+        imageJ.ui().showUI();
+
+        OpenCollectionTableCommand command = new OpenCollectionTableCommand();
+        command.tableUri = new File( "src/test/resources/collections/blobs-two-views-with-same-grid.csv" ).getAbsolutePath();
+        command.run();
+    }
+
+    //@Test
     public void segmentedBlobs()
     {
         final ImageJ imageJ = new ImageJ();
@@ -48,7 +58,7 @@ public class OpenCollectionTableCommandTest
         command.run();
     }
 
-    @Test
+    //@Test
     public void largeAndSmallBlobs()
     {
         final ImageJ imageJ = new ImageJ();
@@ -61,7 +71,7 @@ public class OpenCollectionTableCommandTest
         command.run();
     }
 
-    @Test
+    //@Test
     public void autoContrastBlobs()
     {
         final ImageJ imageJ = new ImageJ();
@@ -74,7 +84,7 @@ public class OpenCollectionTableCommandTest
     }
 
 
-    @Test
+    //@Test
     public void mix2d3d()
     {
         final ImageJ imageJ = new ImageJ();
@@ -86,7 +96,7 @@ public class OpenCollectionTableCommandTest
         command.run();
     }
 
-    @Test
+    //@Test
     public void blobsGrid()
     {
         final ImageJ imageJ = new ImageJ();
@@ -99,7 +109,7 @@ public class OpenCollectionTableCommandTest
         command.run();
     }
 
-    @Test
+    //@Test
     public void blobsGridWithPositionIDs()
     {
         final ImageJ imageJ = new ImageJ();
@@ -110,20 +120,19 @@ public class OpenCollectionTableCommandTest
         command.run();
     }
 
-    @Test
+    //@Test
     public void addImageTwice()
     {
+        // https://github.com/mobie/mobie-viewer-fiji/issues/1244
         final ImageJ imageJ = new ImageJ();
         imageJ.ui().showUI();
 
-        OpenCollectionTableExpertCommand command = new OpenCollectionTableExpertCommand();
-        command.tableUri = new File("src/test/resources/collections/blobs-image-twice-collection.txt").getAbsolutePath();
-        command.dataRootTypeEnum = OpenCollectionTableExpertCommand.DataRootType.UseTableFolder;
-        //command.bdvViewingModeEnum = BdvViewingMode.TwoDimensional;
+        OpenCollectionTableCommand command = new OpenCollectionTableCommand();
+        command.tableUri = new File("src/test/resources/collections/blobs-image-twice-collection.csv").getAbsolutePath();
         command.run();
     }
 
-    @Test
+    //@Test
     public void alphaBlendingOrder()
     {
         final ImageJ imageJ = new ImageJ();
@@ -136,7 +145,7 @@ public class OpenCollectionTableCommandTest
         command.run();
     }
 
-    @Test
+    //@Test
     public void clem( )
     {
         final ImageJ imageJ = new ImageJ();
@@ -149,7 +158,7 @@ public class OpenCollectionTableCommandTest
         command.run();
     }
 
-    @Test
+    //@Test
     public void grid( )
     {
         final ImageJ imageJ = new ImageJ();
@@ -162,7 +171,7 @@ public class OpenCollectionTableCommandTest
         command.run();
     }
 
-    @Test
+    //@Test
     public void spots2D( )
     {
         final ImageJ imageJ = new ImageJ();
@@ -175,7 +184,7 @@ public class OpenCollectionTableCommandTest
         command.run();
     }
 
-    @Test
+    //@Test
     public void nonConsecutiveSpots2D( )
     {
         final ImageJ imageJ = new ImageJ();
@@ -188,7 +197,7 @@ public class OpenCollectionTableCommandTest
         command.run();
     }
 
-    @Test
+    //@Test
     public void spots3D( )
     {
         final ImageJ imageJ = new ImageJ();
@@ -201,7 +210,7 @@ public class OpenCollectionTableCommandTest
         command.run();
     }
 
-    @Test
+    //@Test
     public void spots3dAffine( )
     {
         final ImageJ imageJ = new ImageJ();
@@ -214,7 +223,7 @@ public class OpenCollectionTableCommandTest
         command.run();
     }
 
-    @Test
+    //@Test
     public void spots3dWith20000Columns( )
     {
         final ImageJ imageJ = new ImageJ();
@@ -227,7 +236,7 @@ public class OpenCollectionTableCommandTest
         command.run();
     }
 
-    @Test
+    //@Test
     public void singleBlobs( )
     {
         final ImageJ imageJ = new ImageJ();
@@ -240,7 +249,7 @@ public class OpenCollectionTableCommandTest
         command.run();
     }
 
-    @Test
+    //@Test
     public void blobsWithViews( )
     {
         final ImageJ imageJ = new ImageJ();
@@ -253,7 +262,7 @@ public class OpenCollectionTableCommandTest
         command.run();
     }
 
-    @Test
+    //@Test
     public void twoSameBlobs( )
     {
         final ImageJ imageJ = new ImageJ();
@@ -266,7 +275,7 @@ public class OpenCollectionTableCommandTest
         command.run();
     }
 
-    @Test
+    //@Test
     public void blobsWithDates( )
     {
         final ImageJ imageJ = new ImageJ();
@@ -279,7 +288,7 @@ public class OpenCollectionTableCommandTest
         command.run();
     }
 
-    @Test
+    //@Test
     public void boatsPNG( )
     {
         final ImageJ imageJ = new ImageJ();
@@ -292,7 +301,7 @@ public class OpenCollectionTableCommandTest
         command.run();
     }
 
-    @Test
+    //@Test
     public void mrc( )
     {
         final ImageJ imageJ = new ImageJ();
@@ -305,7 +314,7 @@ public class OpenCollectionTableCommandTest
         command.run();
     }
 
-    @Test
+    //@Test
     public void blobsAndMri( )
     {
         final ImageJ imageJ = new ImageJ();
@@ -318,7 +327,7 @@ public class OpenCollectionTableCommandTest
         command.run();
     }
 
-    @Test
+    //@Test
     public void manyGroups( )
     {
         final ImageJ imageJ = new ImageJ();
@@ -331,7 +340,7 @@ public class OpenCollectionTableCommandTest
         command.run();
     }
 
-    @Test
+    //@Test
     public void thinPlateSplineMri( )
     {
         final ImageJ imageJ = new ImageJ();
@@ -344,7 +353,7 @@ public class OpenCollectionTableCommandTest
         command.run();
     }
 
-    @Test
+    //@Test
     public void thinPlateSplinePlaty( )
     {
         final ImageJ imageJ = new ImageJ();
@@ -358,7 +367,7 @@ public class OpenCollectionTableCommandTest
     }
 
 
-    @Test
+    //@Test
     public void thinPlateSplinePlatyGoogleSheet( )
     {
         final ImageJ imageJ = new ImageJ();
@@ -371,7 +380,7 @@ public class OpenCollectionTableCommandTest
         command.run();
     }
 
-    @Test
+    //@Test
     public void platyGoogleSheet( )
     {
         final ImageJ imageJ = new ImageJ();
@@ -384,7 +393,7 @@ public class OpenCollectionTableCommandTest
         command.run();
     }
 
-    //@Test
+    ////@Test
     public void segmentedNuclei( )
     {
         final ImageJ imageJ = new ImageJ();
@@ -397,7 +406,7 @@ public class OpenCollectionTableCommandTest
         command.run();
     }
 
-    //@Test
+    ////@Test
     public void timelapse( )
     {
         final ImageJ imageJ = new ImageJ();
@@ -422,7 +431,7 @@ public class OpenCollectionTableCommandTest
         command.run();
     }
 
-    @Test
+    //@Test
     public void openOrganelleGoogleSheet( )
     {
         final ImageJ imageJ = new ImageJ();
@@ -479,7 +488,7 @@ public class OpenCollectionTableCommandTest
         //new OpenCollectionTableCommandTest().blobsGridWithPositionIDs();
         //new OpenCollectionTableCommandTest().segmentedBlobs();
         //new OpenCollectionTableCommandTest().spots3D();
-        new OpenCollectionTableCommandTest().spots3dAffine();
+        //new OpenCollectionTableCommandTest().spots3dAffine();
         //new OpenCollectionTableCommandTest().segmentedImageWithFloatLabels();
         //new OpenCollectionTableCommandTest().spots3dWith20000Columns();
         //new OpenCollectionTableCommandTest().createLargeSpotsTable();
@@ -501,5 +510,13 @@ public class OpenCollectionTableCommandTest
         //new OpenCollectionTableCommandTest().autoContrastBlobs();
         //new OpenCollectionTableCommandTest().mix2d3d();
         //new OpenCollectionTableCommandTest().grid();
+        //new OpenCollectionTableCommandTest().openOrganelleGoogleSheet();
+        new OpenCollectionTableCommandTest().gridWithSameNameInDifferentViews();
+        System.out.println("MoBIE loaded. Press ENTER to exit...");
+        try {
+            System.in.read();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

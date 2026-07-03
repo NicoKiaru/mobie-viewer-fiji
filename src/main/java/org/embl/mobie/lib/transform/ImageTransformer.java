@@ -29,7 +29,12 @@
 package org.embl.mobie.lib.transform;
 
 import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.realtransform.InvertibleRealTransform;
+import net.imglib2.realtransform.RealTransform;
+import net.imglib2.realtransform.inverse.WrappedIterativeInvertibleRealTransform;
 import net.imglib2.type.Type;
+import org.embl.mobie.MoBIE;
+import org.embl.mobie.io.util.IOHelper;
 import org.embl.mobie.lib.annotation.Annotation;
 import org.embl.mobie.lib.annotation.AnnotationAdapter;
 import org.embl.mobie.lib.annotation.DefaultAnnotationAdapter;
@@ -48,6 +53,8 @@ import java.util.List;
 
 public class ImageTransformer
 {
+	private static final RealTransformProvider REAL_TRANSFORM_PROVIDER = new RealTransformProvider();
+
 	public static Image< ? > affineTransform( Image< ? > image, AffineTransformation affineTransformation )
 	{
 		String transformedImageName = getTransformedImageName( affineTransformation.getTransformedImageName( image.getName() ), image.getName() );
@@ -115,6 +122,138 @@ public class ImageTransformer
 		}
 	}
 
+	public static Image< ? > elastixBSplineTransform( Image< ? > image, ElastixBSplineTransformation transformation )
+	{
+		String transformedImageName = getTransformedImageName( transformation.getTransformedImageName( image.getName() ), image.getName() );
+
+		if ( image instanceof AnnotationImage && !( image instanceof AnnotatedLabelImage ) )
+		{
+			throw new UnsupportedOperationException( "Elastix BSpline transformations of " + image.getClass() + " is currently not supported." );
+		}
+
+		try
+		{
+			String transformParametersUri = transformation.getTransformParametersUri();
+			if ( MoBIEHelper.isRelativePath( transformParametersUri ) )
+			{
+				String projectRoot = IOHelper.getParentLocation( MoBIE.getInstance().getProjectLocation() );
+				transformParametersUri = IOHelper.combinePath( projectRoot, transformParametersUri );
+			}
+
+			boolean invert = transformation.isInvert();
+			final RealTransform realTransform = REAL_TRANSFORM_PROVIDER.getElastixBSplineRealTransform( transformParametersUri, invert );
+
+			if ( image instanceof AnnotatedLabelImage )
+			{
+				return createRealTransformedAnnotatedLabelImage(
+						( AnnotatedLabelImage ) image,
+						transformedImageName,
+						realTransform,
+						transformation );
+			}
+
+			return new RealTransformedImage<>(
+					image,
+					transformedImageName,
+					realTransform,
+					transformation );
+		}
+		catch ( Exception e )
+		{
+			throw new RuntimeException( "Could not create Elastix BSpline transform from: " + transformation.getTransformParametersUri(), e );
+		}
+	}
+
+	public static Image< ? > displacementFieldTransform( Image< ? > image, DisplacementFieldTransformation transformation )
+	{
+		String transformedImageName = getTransformedImageName( transformation.getTransformedImageName( image.getName() ), image.getName() );
+
+		if ( image instanceof AnnotationImage && !( image instanceof AnnotatedLabelImage ) )
+			throw new UnsupportedOperationException( "Displacement field transformations of " + image.getClass() + " are currently not supported." );
+
+		String displacementFieldUri = transformation.getDisplacementFieldUri();
+		if ( MoBIEHelper.isRelativePath( displacementFieldUri ) )
+		{
+			String projectRoot = IOHelper.getParentLocation( MoBIE.getInstance().getProjectLocation() );
+			displacementFieldUri = IOHelper.combinePath( projectRoot, displacementFieldUri );
+		}
+
+		try
+		{
+			final RealTransform realTransform = REAL_TRANSFORM_PROVIDER.getDisplacementFieldRealTransform( displacementFieldUri );
+
+			if ( image instanceof AnnotatedLabelImage )
+			{
+				return createRealTransformedAnnotatedLabelImage(
+						( AnnotatedLabelImage ) image,
+						transformedImageName,
+						realTransform,
+						transformation );
+			}
+
+			return new RealTransformedImage<>(
+					image,
+					transformedImageName,
+					realTransform,
+					transformation );
+		}
+		catch ( Exception e )
+		{
+			throw new RuntimeException( "Could not create displacement field transform from: " + displacementFieldUri, e );
+		}
+	}
+
+	private static < A extends Annotation, TA extends A > DefaultAnnotatedLabelImage< ? > createRealTransformedAnnotatedLabelImage(
+			AnnotatedLabelImage< A > annotatedLabelImage,
+			String transformedImageName,
+			RealTransform realTransform,
+			Transformation transformation )
+	{
+		final Image< ? extends Type< ? > > labelImage = annotatedLabelImage.getLabelImage();
+		final Image< ? extends Type< ? > > transformedLabelImage =
+				( Image< ? extends Type< ? > > ) new RealTransformedImage<>(
+						( Image< Type< ? > > ) labelImage,
+						transformedImageName,
+						realTransform,
+						transformation );
+		final AnnData< A > annData = annotatedLabelImage.getAnnData();
+
+		AnnotationAdapter< A > annotationAdapter = annotatedLabelImage.getAnnotationAdapter();
+
+		if ( annotationAdapter instanceof LazyAnnotatedSegmentAdapter )
+		{
+			return new DefaultAnnotatedLabelImage<>( transformedLabelImage, annData, annotationAdapter );
+		}
+		else
+		{
+			final RealTransform annotationTransform = createInverseAnnotationTransform( realTransform );
+			final AnnotationRealTransformer< A, TA > realTransformer =
+					new AnnotationRealTransformer<>( annotationTransform );
+
+			TransformedAnnData< A, TA > transformedAnnData = new TransformedAnnData<>( annData, realTransformer );
+
+			AnnotationAdapter< TA > newAnnotationAdapter =
+					new DefaultAnnotationAdapter<>(
+							transformedAnnData,
+							annotatedLabelImage.getName() );
+
+			return new DefaultAnnotatedLabelImage<>( transformedLabelImage, transformedAnnData, newAnnotationAdapter );
+		}
+	}
+
+	private static RealTransform createInverseAnnotationTransform( final RealTransform realTransform )
+	{
+		if ( realTransform instanceof InvertibleRealTransform )
+			return ( ( InvertibleRealTransform ) realTransform ).inverse();
+
+		final WrappedIterativeInvertibleRealTransform< RealTransform > wrappedInverse =
+				new WrappedIterativeInvertibleRealTransform<>( realTransform );
+		wrappedInverse.getOptimzer().setMaxStep( 500.0 );
+		wrappedInverse.getOptimzer().setTolerance( 0.5 );
+		wrappedInverse.getOptimzer().setMaxIters( 200 );
+		return wrappedInverse.inverse();
+	}
+
 	public static Image< ? > timeTransform( Image< ? > image, TimepointsTransformation transformation )
 	{
 		String transformedImageName = transformation.getTransformedImageName( image.getName() );
@@ -123,10 +262,8 @@ public class ImageTransformer
 				image,
 				transformedImageName == null ? image.getName() : transformedImageName,
 				transformation.getTimepointsMapping(),
-				transformation.isKeep() );
-
-		// FIXME: This should happen in the constructor
-		transformedImage.setTransformation( transformation );
+				transformation.isKeep(),
+				transformation );
 
 		return transformedImage;
 
@@ -145,10 +282,8 @@ public class ImageTransformer
 				new RealTransformedImage<>(
 					image,
 					transformedImageName == null ? image.getName() : transformedImageName,
-					interpolatedTransform );
-
-		// FIXME: This should be done in the constructor of RealTransformedImage !
-		realTransformedImage.setTransformation( transformation );
+					interpolatedTransform,
+					transformation );
 
 		return realTransformedImage;
 	}
@@ -256,6 +391,26 @@ public class ImageTransformer
 				DataStore.addImage( transformedImage );
 			}
 
+		}
+		else if ( transformation instanceof ElastixBSplineTransformation )
+		{
+			ElastixBSplineTransformation elastixBSplineTransformation = ( ElastixBSplineTransformation ) transformation;
+
+			for ( Image< ? > image : images )
+			{
+				Image< ? > transformedImage = elastixBSplineTransform( image, elastixBSplineTransformation );
+				DataStore.addImage( transformedImage );
+			}
+		}
+		else if ( transformation instanceof DisplacementFieldTransformation )
+		{
+			DisplacementFieldTransformation displacementFieldTransformation = ( DisplacementFieldTransformation ) transformation;
+
+			for ( Image< ? > image : images )
+			{
+				Image< ? > transformedImage = displacementFieldTransform( image, displacementFieldTransformation );
+				DataStore.addImage( transformedImage );
+			}
 		}
 		else if ( transformation instanceof CropTransformation )
 		{

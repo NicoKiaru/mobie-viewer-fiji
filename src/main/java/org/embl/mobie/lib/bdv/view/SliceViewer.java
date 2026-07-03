@@ -41,6 +41,7 @@ import org.embl.mobie.lib.bdv.*;
 import org.embl.mobie.lib.bdv.blend.MoBIEAccumulateProjectorARGB;
 import org.embl.mobie.lib.bdv.blend.BlendingMode;
 import org.embl.mobie.lib.bdv.overlay.ImageNameOverlay;
+import org.embl.mobie.lib.bdv.overlay.PixelValueOverlay;
 import org.embl.mobie.lib.color.OpacityHelper;
 import org.embl.mobie.lib.image.Image;
 import org.embl.mobie.lib.image.RegionAnnotationImage;
@@ -63,8 +64,6 @@ import javax.swing.*;
 import java.awt.Window;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 
 public class SliceViewer
 {
@@ -72,7 +71,9 @@ public class SliceViewer
 	public static final String LOAD_ADDITIONAL_VIEWS = "Load Additional Views";
 	public static final String SAVE_CURRENT_SETTINGS_AS_VIEW = "Save Current View";
 	public static final String DELETE_VIEW = "Delete View";
+	public static final String TOGGLE_PIXEL_VALUE_OVERLAY = "Toggle Pixel Values Under Mouse [ Shift V ]";
 	public static final String FRAME_TITLE = "MoBIE BigDataViewer";
+	private static final int PIXEL_VALUE_OVERLAY_UPDATE_INTERVAL_MS = 120;
 	public static boolean tileRenderOverlay = false;
 	private final SourceBdvDisplayService bdvDisplayService;
 	private BdvHandle bdvHandle;
@@ -83,6 +84,7 @@ public class SliceViewer
 	private SourceContextMenuClickBehaviour contextMenu;
 	private final SourceService sacService;
 	private final ImageNameOverlay imageNameOverlay;
+	private final PixelValueOverlay pixelValueOverlay;
 
 	public SliceViewer( MoBIE moBIE, boolean is2D )
 	{
@@ -102,6 +104,7 @@ public class SliceViewer
 		}
 
 		imageNameOverlay = new ImageNameOverlay( this );
+		pixelValueOverlay = new PixelValueOverlay( this, PIXEL_VALUE_OVERLAY_UPDATE_INTERVAL_MS );
 
 		installContextMenuAndKeyboardShortCuts();
 
@@ -127,6 +130,7 @@ public class SliceViewer
 
 	private void installContextMenuAndKeyboardShortCuts( )
 	{
+		@SuppressWarnings( { "rawtypes", "unchecked" } )
 		final SliceViewAnnotationSelector sliceViewAnnotationSelector =
 				new SliceViewAnnotationSelector( bdvHandle, is2D, () -> moBIE.getViewManager().getAnnotationDisplays() );
 
@@ -148,7 +152,10 @@ public class SliceViewer
 			moBIE.getViewManager().getViewsDeleter().deleteViewDialog();
 		});
 
-		final Set< String > actionsKeys = sacService.getActionsKeys();
+		sacService.registerAction( TOGGLE_PIXEL_VALUE_OVERLAY, sourceAndConverters -> {
+			pixelValueOverlay.setActive( !pixelValueOverlay.isActive() );
+		} );
+
 		final ArrayList< String > actions = new ArrayList< String >();
 		actions.add( SourceService.getCommandName( LogImagesInfoCommand.class ) );
 		actions.add( SourceService.getCommandName( CurrentLocationLoggerCommand.class ) );
@@ -166,6 +173,7 @@ public class SliceViewer
 		actions.add( LOAD_ADDITIONAL_VIEWS );
 		actions.add( SAVE_CURRENT_SETTINGS_AS_VIEW );
 		actions.add( DELETE_VIEW );
+		actions.add( TOGGLE_PIXEL_VALUE_OVERLAY );
 
 		if ( projectCommands != null )
 		{
@@ -183,8 +191,11 @@ public class SliceViewer
 		ActionMap actionMap = new ActionMap();
 		actionMap.put( "MoBIE manual transform", new RunnableAction( "MoBIE manual transform",
 				() -> new Thread( () -> { Services.commandService.run( ManualTransformationCommand.class, true ); }).start() ) );
+		actionMap.put( "MoBIE toggle pixel values", new RunnableAction( "MoBIE toggle pixel values",
+				() -> pixelValueOverlay.setActive( !pixelValueOverlay.isActive() ) ) );
 		InputMap inputMap = new InputMap();
 		inputMap.put( KeyStroke.getKeyStroke("T"),"MoBIE manual transform" );
+		inputMap.put( KeyStroke.getKeyStroke("shift V"),"MoBIE toggle pixel values" );
 		bdvHandle.getKeybindings().addInputMap( "MoBIE", inputMap );
 		bdvHandle.getKeybindings().addActionMap( "MoBIE", actionMap );
 
@@ -296,6 +307,11 @@ public class SliceViewer
 			if ( numTimePoints > maxNumTimePoints ) maxNumTimePoints = numTimePoints;
 		}
 		bdvHandle.getViewerPanel().state().setNumTimepoints( maxNumTimePoints );
+	}
+
+	public void close()
+	{
+		pixelValueOverlay.close();
 	}
 
 	public boolean is2D()

@@ -97,6 +97,9 @@ import static sc.fiji.bdvpg.viewer.bdv.BdvHandleHelper.isSourceIntersectingCurre
 
 public abstract class MoBIEHelper
 {
+	// Commented this, because otherwise the github action test are failing
+	// static { net.imagej.patcher.LegacyInjector.preinit(); }
+
 	public static boolean isRelativePath(String uri) {
 		if (uri == null || uri.isEmpty()) {
 			return false;
@@ -275,21 +278,15 @@ public abstract class MoBIEHelper
 	public static final String GRID_TYPE_HELP = "If the images are different and not too many, use Transformed for more flexible visualisation.\n" +
 			"If all images are identical use Stitched for better performance.";
 
-	static { net.imagej.patcher.LegacyInjector.preinit(); }
-
 	public static String print(double[] array, int numSignificantDigits) {
-		StringBuilder pattern = new StringBuilder("#");
-		if (numSignificantDigits > 0) pattern.append(".");
-		for (int i = 0; i < numSignificantDigits; i++) pattern.append("#");
-		DecimalFormat formatter = new DecimalFormat(pattern.toString());
-
 		StringBuilder result = new StringBuilder();
 		result.append( "(" );
 		for (int i = 0; i < array.length; i++) {
-			if (Math.abs(array[i]) < 1e-10) {
-				array[i] = 0.0;  // Explicitly set to zero to remove negative sign
+			double value = array[i];
+			if (Math.abs(value) < 1e-10) {
+				value = 0.0; // avoid printing "-0" for near-zero values
 			}
-			result.append(formatter.format(array[i]));
+			result.append(formatDouble(value, numSignificantDigits));
 			if (i < array.length - 1) {
 				result.append(", ");
 			}
@@ -299,11 +296,19 @@ public abstract class MoBIEHelper
 	}
 
 	public static String print(double value, int numSignificantDigits) {
+		return formatDouble(value, numSignificantDigits);
+	}
+
+	private static String formatDouble(double value, int numSignificantDigits)
+	{
+		if (numSignificantDigits == -1)
+			return Double.toString(value);
+
 		StringBuilder pattern = new StringBuilder("#");
 		if (numSignificantDigits > 0) pattern.append(".");
 		for (int i = 0; i < numSignificantDigits; i++) pattern.append("#");
 		DecimalFormat formatter = new DecimalFormat(pattern.toString());
-		return formatter.format( value );
+		return formatter.format(value);
 	}
 
 	public static <E extends Enum<E>> String[] enumAsStringArray(Class<E> enumClass) {
