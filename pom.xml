@@ -9,7 +9,8 @@
 
     <groupId>org.embl.mobie</groupId>
     <artifactId>mobie-viewer-fiji</artifactId>
-    <version>6.7.7-SNAPSHOT</version>
+    <version>7.0.0-SNAPSHOT</version>
+
 
     <!-- -SNAPSHOT -->
     <!--  https://sites.imagej.net/MoBIE/-->
@@ -105,12 +106,14 @@
 
         <allowedDuplicateClasses>${scijava.allowedDuplicateClasses},org.relaxng.*,sun.*,com.sun.*,sun.rmi.*,com.sun.jdi.*,sun.jvmstat.*,sun.applet.*,com.sun.xml.*,com.sun.tools.*,sun.tools.*,com.sun.istack.*,shaded.parquet.it.unimi.dsi.fastutil.*,javax.xml.bind.*,com.sun.xml.bind.*,com.sun.xml.txw2.*,com.sun.codemodel.*</allowedDuplicateClasses>
 
-        <mobie-io.version>4.0.8</mobie-io.version>
-            <!--
+        <mobie-io.version>5.0.0-SNAPSHOT</mobie-io.version>
+
+        <!--
             Temporary: keep commented while elastix BSpline support is vendored in MoBIE.
             Remove this comment and re-enable the dependency once we can consume a suitable ITC release.
             <image-transform-converters.version>0.2.1-SNAPSHOT</image-transform-converters.version>
             -->
+
         <bigdataviewer-playground.version>0.22.0</bigdataviewer-playground.version>
         
         <!-- BigVolumeBrowser -->
@@ -127,6 +130,19 @@
         <tablesaw-excel.version>0.43.1</tablesaw-excel.version>
         <tablesaw-parquet.version>0.11.0</tablesaw-parquet.version>
 
+<!--        &lt;!&ndash; NB: This should be removed once Fiji ships the release versions (and there is a corresponding parent pom)&ndash;&gt;-->
+<!--        <n5-viewer_fiji.version>6.2.0</n5-viewer_fiji.version>-->
+<!--        <n5.version>4.0.0</n5.version>-->
+<!--        <n5-aws-s3.version>5.0.0</n5-aws-s3.version>-->
+<!--        <n5-blosc.version>2.0.0</n5-blosc.version>-->
+<!--        <n5-google-cloud.version>6.0.0</n5-google-cloud.version>-->
+<!--        <n5-hdf5.version>3.0.0</n5-hdf5.version>-->
+<!--        <n5-ij.version>5.0.0</n5-ij.version>-->
+<!--        <n5-imglib2.version>8.0.0</n5-imglib2.version>-->
+<!--        <n5-universe.version>3.0.0</n5-universe.version>-->
+<!--        <n5-zarr.version>2.0.1</n5-zarr.version>-->
+<!--        <n5-zstandard.version>2.0.0</n5-zstandard.version>-->
+
         <!-- NB: Deploy releases to the SciJava Maven repository. -->
         <releaseProfiles>sign,deploy-to-scijava</releaseProfiles>
 
@@ -141,10 +157,17 @@
             <url>https://maven.scijava.org/content/groups/public</url>
         </repository>
     </repositories>
+
     <dependencies>
         <dependency>
-            <groupId>sc.fiji</groupId>
-            <artifactId>bigwarp_fiji</artifactId>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+            <version>1.28.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.embl.mobie</groupId>
+            <artifactId>mobie-io</artifactId>
+            <version>${mobie-io.version}</version>
         </dependency>
         <dependency>
             <groupId>net.imagej</groupId>
@@ -154,6 +177,10 @@
             <!-- SIFT Registration, TODO: does this ship with Fiji anyway? -->
             <groupId>mpicbg</groupId>
             <artifactId>mpicbg</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>sc.fiji</groupId>
+            <artifactId>bigwarp_fiji</artifactId>
         </dependency>
         <dependency>
             <!-- TurboReg Registration, TODO: could come from update site BIG-EPFL -->
@@ -187,11 +214,6 @@
         <dependency>
             <groupId>sc.fiji</groupId>
             <artifactId>spim_data</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.embl.mobie</groupId>
-            <artifactId>mobie-io</artifactId>
-            <version>${mobie-io.version}</version>
         </dependency>
             <!--
             Temporary: MoBIE currently vendors the needed elastix BSpline code in lib/transform.

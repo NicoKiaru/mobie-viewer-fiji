@@ -30,7 +30,6 @@ package org.embl.mobie;
 
 import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import ij.IJ;
 import ij.WindowManager;
 import loci.common.DebugTools;
@@ -62,8 +61,9 @@ import org.embl.mobie.ui.UserInterface;
 import org.embl.mobie.ui.WindowArrangementHelper;
 import org.jetbrains.annotations.NotNull;
 import sc.fiji.bdvpg.PlaygroundPrefs;
-import sc.fiji.bdvpg.scijava.service.SourceService;
-import sc.fiji.bdvpg.service.SourceServices;
+import sc.fiji.bdvpg.scijava.services.SourceAndConverterService;
+import sc.fiji.bdvpg.services.SourceAndConverterServices;
+import software.amazon.awssdk.services.s3.S3Client;
 import tech.tablesaw.api.Table;
 import tech.tablesaw.io.csv.CsvReadOptions;
 
@@ -91,8 +91,8 @@ public class MoBIE
 
 		new Thread(() -> {
 			long start = System.currentTimeMillis();
-			AmazonS3ClientBuilder.standard();
-			IJ.log( "( Initialised AmazonS3ClientBuilder in " + ( System.currentTimeMillis() -start ) + " ms. )" );
+			S3Client.builder();
+			IJ.log( "( Initialised S3Client.builder in " + ( System.currentTimeMillis() - start ) + " ms. )" );
 		}).start();
 	}
 
@@ -154,9 +154,10 @@ public class MoBIE
 			}
 
 			// Check for additional view.json files of arbitrary names (requires search, which may not be available on S3)
+
 			if ( IOHelper.getType( projectUri ).equals( ResourceType.FILE ) )
 			{
-				// Find all .json files in the table parent dir
+				// Find all JSON files in the table dir
 				// and try to load them as views
 				String parentDir = getParentLocation( projectUri );
 				Files.walk( Paths.get( parentDir ), 1 )
@@ -173,10 +174,18 @@ public class MoBIE
 								// JSON file could not be parsed
 								IJ.log("[WARNING] Additional views parsing failed: " + p );
 							}
-						});
+						}
+				);
 			}
 
-			initUiAndShowView( dataset.views().values().iterator().next().getName() );
+			if ( dataset.views().keySet().contains( "default" ) )
+			{
+				initUiAndShowView( "default" );
+			}
+			else
+			{
+				initUiAndShowView( dataset.views().values().iterator().next().getName() );
+			}
 		}
 		else if ( settings.values.getProjectType().equals( ProjectType.MoBIEJSON ) )
 		{

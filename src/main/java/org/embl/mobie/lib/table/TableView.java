@@ -710,6 +710,7 @@ public class TableView< A extends Annotation > implements SelectionListener< A >
 		final ArrayList< A > selectedRows = new ArrayList<>();
 		final ArrayList< A > rows = tableModel.annotations();
 		final boolean isNumeric = tableModel.numericColumnNames().contains( columnName );
+
 		if ( isNumeric )
 		{
 			final double minValue = dialog.getMinValue();
